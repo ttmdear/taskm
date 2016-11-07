@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+        <!-- <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 
@@ -9,189 +9,83 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
+        -->
         <script src="../src/taskm.js"></script>
         <!-- <link rel="stylesheet" type="text/css" href="../src/css/themes/silver/puploader.css">-->
 
         <!-- <link rel="stylesheet" type="text/css" href="./demo.css">-->
         <!-- <script src="./demo.js"></script>-->
         <script>
-            function test1()
-            {
-                queue = taskm.task(function(){
-                    this.setName('litera');
-
-                    this.dependence(function(){
-                        this.task(function(){
-                            this.setName('litera')
-
-                            this.dependence(function(){
-                                this.task(function(){
-                                    this.setName('litera')
-
-                                    this.dependence(function(){
-                                        this.task(function(){
-                                            this.setName('litera')
-
-                                            this.dependence(function(){
-                                                this.task(function(){
-                                                    this.setName('litera')
-
-                                                    this.execute(function(done){
-                                                        console.log("execute", this.getName(), this.get());
-                                                        done('p');
-                                                    });
-                                                });
-
-                                                this.task(function(){
-                                                    this.setName('litera')
-
-                                                    this.execute(function(done){
-                                                        console.log("execute", this.getName(), this.get());
-                                                        done('j');
-                                                    });
-                                                });
-
-                                                this.control(function(results, next){
-                                                    this.set('litera', 'jan');
-                                                    next();
-                                                });
-                                            });
-
-                                            this.execute(function(done){
-                                                console.log("execute", this.getName(), this.get());
-                                                done(this.get('litera')+'a');
-                                            });
-                                        });
-                                    });
-
-                                    this.execute(function(done){
-                                        console.log("execute", this.getName(), this.get());
-                                        done(this.get('litera')+'w');
-                                    });
-                                });
-
-                            });
-
-                            this.execute(function(done){
-                                console.log("execute", this.getName(), this.get());
-                                done(this.get('litera')+'e');
-                            });
-                        });
-                    });
-
-                    this.execute(function(done){
-                        console.log("execute", this.getName(), this.get());
-                        done(this.get('litera')+'l');
-                    });
-                });
-
-                queue.run(function(responses){
-                    console.log('run', responses);
-                    // console.log('run::result:a', responses.getByName('a'));
-                });
-            }
-
             window.onload = function()
             {
-                function Layout(){};
-                function Main(){};
-
-                function parentSupper()
-                {
-                    return taskm.task(function(){
-                        this.dependence(function(){
-                            this.task(function(){
-                                this.execute(function(done){
-                                    console.log('task1');
-                                    done({wiek : 12});
-                                });
-                            });
-
-                            this.task(function(){
-                                this.execute(function(done){
-                                    console.log('task2');
-                                    done({imie : 123});
-                                });
-                            });
-
-                            this.onLoad(function(results){
-                                console.log('onLoad dependence a', results, results.getAll());
-                            });
-                        });
-
-                        this.execute(function(done){
-                            this.set('nazwisko', 'jankowski');
-                            done(this.get());
-                        });
-
-                        this.onLoad(function(){
-                            console.log('onLoad task');
-                        });
-
-                    }).onLoad(function(){
-                        console.log('onLoad dependence b');
+                taskm.task(function(){
+                    this.exec(function(resolve, reject){
+                        console.log('1', this.get());
                     });
-                }
 
-                function supper()
-                {
-                    return taskm.task(function(){
-                        this.setName('layout');
+                    this.task(function(){
+                        this.exec(function(resolve, reject){
+                            console.log('1.1', this.get());
+                            resolve();
+                        });
 
-                        this.dependence(function(){
-                            this.queue(parentSupper());
-
-                            this.control(function(responses, next){
-                                console.log('supper', responses);
+                        this.task(function(){
+                            this.setName('auth');
+                            this.exec(function(resolve, reject){
+                                console.log('1.1.1', this.get());
+                                setTimeout(function(){
+                                    resolve(123);
+                                }, 2000);
                             });
                         });
 
-                        this.execute(function(done){
-                            console.log('supper::execute', this.get());
-                            // done({
-                            //     layout : new Layout(),
-                            // });
-                        });
-                    });
-                }
-
-                function display()
-                {
-                    return taskm.task(function(){
-                        this.dependence(function(){
-                            this.queue(supper());
-
-                            this.task(function(){
-                                this.setName('wiek');
-
-                                this.dependence(function(){
-                                    this.task(function(){
-                                        // this.setName('dataUrodzenia');
-
-                                        this.execute(function(dane){
-                                            dane({dataUrodzenia : '1022'});
-                                        });
-                                    });
-                                });
-
-                                this.execute(function(done){
-                                    this.set('wiek', 12);
-                                    done(this.get());
-                                });
+                        this.task(function(){
+                            this.setName('auth2');
+                            this.exec(function(resolve, reject){
+                                console.log('1.1.2', this.get());
+                                setTimeout(function(){
+                                    resolve(123);
+                                }, 5000);
                             });
-
-                            // przepisanie wyniku dzialnia obiektu z kolejki do
-                            // zadania
                         });
 
-                        this.execute(function(done){
-                            console.log('execute', this.get());
-                        });
                     });
-                }
 
-                queue = display();
-                queue.run();
+                    this.task(function(){
+                        this.exec(function(resolve, reject){
+                            console.log('1.2', this.get());
+                            resolve();
+                        });
+
+                        this.task('auth');
+                    });
+
+                }).then(function(data){
+                    console.log('then', data);
+                });
+
+                // task = taskm.task(function(){
+                //     this.exec(function(resolve, reject){
+
+                //     });
+
+                //     // definiuje zadanie zalezne
+                //     this.task(function(){
+                //         this.setName('z1');
+
+                //         this.exec(function(){
+                //         });
+
+                //     }).error(function(repair){
+                //         this.set('nazwisko', 'test');
+                //         repair();
+                //     });
+
+                // });
+
+                // task.error(function(){
+
+                // });
             }
         </script>
     </head>
