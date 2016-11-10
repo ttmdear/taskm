@@ -92,7 +92,8 @@
      */
     function Events(context)
     {
-        this.p = {
+        var $t = this;
+        var $p = $t.p = {
             // kontener ze zdarzeniami
             events : {},
             // kontekst w ktorym ma byc wywolane zdarzenie
@@ -105,19 +106,19 @@
 
             Events.prototype.on = function(event, callback)
             {
-                if (this.p.events[event] === undefined) {
-                    this.p.events[event] = [];
+                if ($p.events[event] === undefined) {
+                    $p.events[event] = [];
                 }
 
-                this.p.events[event].push(callback);
+                $p.events[event].push(callback);
             }
 
             Events.prototype.trigger = function(event, context)
             {
                 var args = Array.prototype.slice.call(arguments);
 
-                if (context === undefined && this.p.context !== undefined) {
-                    context = this.p.context;
+                if (context === undefined && $p.context !== undefined) {
+                    context = $p.context;
                 }
 
                 if (context === undefined) {
@@ -127,12 +128,12 @@
                 args.shift();
                 args.shift();
 
-                if (this.p.events[event] === undefined) {
+                if ($p.events[event] === undefined) {
                     // there are no collbacks attached to that event
                     return;
                 }
 
-                s.each(this.p.events[event], function(i, callback){
+                s.each($p.events[event], function(i, callback){
                     s.needFunction(callback, "Callback of " + event + " is not function");
                     callback.apply(context, args);
                 });
@@ -142,8 +143,8 @@
 
     function Queue()
     {
-        this.p =
-        {
+        var $t = this;
+        var $p = $t.p = {
             // flaga informujaca czy kolejka zostala zatrzymana
             stoped : false,
             waiters : {},
@@ -156,48 +157,45 @@
             Queue.prototype.stop = function()
             {
                 // zatrzymanie kole
-                this.p.stoped = true;
-                return t;
+                $p.stoped = true;
+                return $t;
             }
 
             Queue.prototype.isStoped = function()
             {
-                return this.p.stoped === true;
+                return $p.stoped === true;
             }
 
             Queue.prototype.wait = function(name, waiter)
             {
-                if (s.isUndefined(this.p.waiters[name])) {
-                    this.p.waiters[name] = [];
+                if (s.isUndefined($p.waiters[name])) {
+                    $p.waiters[name] = [];
                 }
 
-                this.p.waiters[name].push(waiter);
+                $p.waiters[name].push(waiter);
+                $t._check();
 
-                this._check();
-
-                return this;
+                return $t;
             }
 
             Queue.prototype.notify = function(name, data)
             {
-                this.p.notified[name] = data;
+                $p.notified[name] = data;
 
-                this._check();
+                $t._check();
 
-                return this;
+                return $t;
             }
 
             Queue.prototype._check = function()
             {
-                var t = this;
-
-                s.each(t.p.notified, function(name, data){
-                    if (s.isUndefined(t.p.waiters[name])) {
+                s.each($p.notified, function(name, data){
+                    if (s.isUndefined($p.waiters[name])) {
                         return;
                     }
 
-                    s.each(t.p.waiters[name], function(i, waiter){
-                        t.p.waiters[name].splice(i,1);
+                    s.each($p.waiters[name], function(i, waiter){
+                        $p.waiters[name].splice(i,1);
                         waiter(data);
                     });
                 });
@@ -207,7 +205,8 @@
 
     function Task(queue)
     {
-        this.p = {
+        var $t = this;
+        var $p = $t.p = {
             // wskaznik na kolejke
             queue : queue,
             // kontener na dane ktore mozna ustawic w obrembie danego zadania
@@ -222,6 +221,9 @@
             exec : function(resolve, reject){
                 resolve(this.get());
             },
+            init : function(){},
+            inited : false,
+            end : function(){},
             // opuznienie wykonania zadania
             timeout : null,
 
@@ -229,8 +231,14 @@
             events : new Events(this),
             // funckja wykonywana na bledzie
             error : function(data, repair, resolve){
+                if (s.isFunction($p.errorAll)) {
+                    $p.errorAll.call($t, data, repair, resolve);
+                    return;
+                }
+
                 throw("Not catch task error "+data);
             },
+            errorAll : null,
         };
 
         // public
@@ -248,36 +256,46 @@
              */
             Task.prototype.exec = function(exec)
             {
-                this.p.exec = exec;
+                $p.exec = exec;
                 return this;
             }
 
             Task.prototype.get = function(name)
             {
                 if (name !== undefined) {
-                    if (this.p.data[name] !== undefined) {
-                        return this.p.data[name];
+                    if ($p.data[name] !== undefined) {
+                        return $p.data[name];
                     }else{
                         return undefined;
                     }
                 }
 
-                return this.p.data;
+                return $p.data;
             }
 
             Task.prototype.set = function(name, value)
             {
-                var t = this;
                 if (s.isString(name)) {
-                    this.p.data[name] = value;
+                    $p.data[name] = value;
                     return this;
                 }
 
                 s.each(name, function(name, value){
-                    t.p.data[name] = value;
+                    $p.data[name] = value;
                 });
 
                 return this;
+            }
+
+            Task.prototype.errorAll = function(errorAll)
+            {
+                $p.errorAll = errorAll;
+                return this;
+            }
+
+            Task.prototype.stop = function()
+            {
+                $p.queue.stop();
             }
 
             /**
@@ -288,8 +306,8 @@
              */
             Task.prototype.setName = function(name)
             {
-                this.p.name = name;
-                this.p.isNamed = true;
+                $p.name = name;
+                $p.isNamed = true;
                 return this;
             }
 
@@ -300,17 +318,17 @@
              */
             Task.prototype.isNamed = function()
             {
-                return this.p.isNamed === true;
+                return $p.isNamed === true;
             }
 
             Task.prototype.getName = function()
             {
-                return this.p.name;
+                return $p.name;
             }
 
             Task.prototype.on = function(event, callback)
             {
-                this.p.events.on(event, callback);
+                $p.events.on(event, callback);
                 return this;
             }
 
@@ -323,7 +341,7 @@
              */
             Task.prototype.error = function(error)
             {
-                this.p.error = error;
+                $p.error = error;
                 return this;
             }
 
@@ -332,7 +350,7 @@
                 if (s.isString(creatorOrName)) {
                     // tworzenie zaleznosci od calkowicie innego zadania z
                     // innej galezi
-                    this.p.dependences.push({
+                    $p.dependences.push({
                         type : 'wait',
                         to : creatorOrName
                     });
@@ -341,18 +359,30 @@
                 }
 
                 // tworzymy zadanie
-                var task = new Task(this.p.queue);
+                var task = new Task($p.queue);
 
                 if (s.isFunction(creatorOrName)) {
                     task.creator(creatorOrName);
                 }
 
-                this.p.dependences.push({
+                $p.dependences.push({
                     type : 'task',
                     task : task,
                 });
 
                 return task;
+            }
+
+            Task.prototype.init = function(init)
+            {
+                $p.init = init;
+                return this;
+            }
+
+            Task.prototype.end = function(end)
+            {
+                $p.end = end;
+                return this;
             }
 
             Task.prototype.creator = function(creator)
@@ -363,14 +393,17 @@
 
             Task.prototype.then = function(then)
             {
-                var t = this;
+                if ($p.inited === false) {
+                    $p.init.call(this);
+                    $p.inited = true;
+                }
 
                 // pobieram wszystkie zalezne zadania
-                var dependences = this.p.dependences;
+                var dependences = $p.dependences;
 
                 // jesli przy zadaniu byl blad, a zaleznosci zostaly juz
                 // wykonane, wiec nie wykonujemy ich jeszcze raz
-                if (this.p.dependencesDone) {
+                if ($p.dependencesDone) {
                     dependences = [];
                 }
 
@@ -388,41 +421,94 @@
                         return;
                     }
 
-                    if (t.p.dependencesDone === false) {
+                    if ($p.dependencesDone === false) {
                         // jest to zabezpieczenie ze wynik zaleznosci zostanie
                         // wpisany tylko za pierwszym razem, jesli zostanie
                         // uruchomiony proces repair, to nie spowoduje to
                         // ponownego wywolania wszystkich zadan zaleznych
-                        t.set(results);
+                        $t.set(results);
                     }
 
                     // wszystkie zaleznosci zostaly juz wykonane,
-                    t.p.dependencesDone = true;
+                    $p.dependencesDone = true;
 
                     // funckja wykonana gdy bazowe zadanie zostanie poprawnie
                     // zakonczone
                     var resolve = function(data){
+                        // wywolujemy event informujacy o poprawnym zakonczeniu
+                        // zadania
+                        $p.events.trigger('resolve', $t, $t);
+                        s.events.trigger('resolve', $t, $t);
+
+                        if ($p.queue.isStoped()) {
+                            return;
+                        }
+
+                        $p.events.trigger('after', $t, $t, data);
+                        s.events.trigger('after', $t, $t, data);
+
+                        if ($p.queue.isStoped()) {
+                            return;
+                        }
+
                         // od razu przekazujemy dane do then
-                        t.p.queue.notify(t.getName(), data);
-                        then.call(t, data);
+                        $p.queue.notify($t.getName(), data);
+
+                        $p.end.call($t);
+                        then.call($t, data);
                     }
 
                     // repair wywoluje jeszcze raz procedure exec
                     var repair = function(){
-                        t.then(then);
+                        $p.events.trigger('repair', $t, $t);
+                        s.events.trigger('repair', $t, $t);
+
+                        if ($p.queue.isStoped()) {
+                            return;
+                        }
+
+                        $p.events.trigger('after', $t, $t);
+                        s.events.trigger('after', $t, $t);
+
+                        if ($p.queue.isStoped()) {
+                            return;
+                        }
+
+                        $t.then(then);
                     }
 
                     // funckja wykonana gdy bazowe zadanie zostanie blednie
                     // zakonczone
                     var reject = function(data){
+                        $p.events.trigger('reject', $t, $t);
+                        s.events.trigger('reject', $t, $t);
+
+                        if ($p.queue.isStoped()) {
+                            return;
+                        }
+
+                        $p.events.trigger('after', $t, $t, data);
+                        s.events.trigger('after', $t, $t, data);
+
+                        if ($p.queue.isStoped()) {
+                            return;
+                        }
+
                         // wywoluje funkje do obslugi bledu
-                        t.p.error.call(t, data, repair, resolve);
+                        $p.error.call($t, data, repair, resolve);
+                    }
+
+                    $p.events.trigger('before', $t, $t);
+                    s.events.trigger('before', $t, $t);
+
+                    if ($p.queue.isStoped()) {
+                        return;
                     }
 
                     try{
-                        t.p.exec.call(t, resolve, reject);
+                        $p.exec.call($t, resolve, reject);
                     }catch(e){
-                        t.p.error.call(t, e, repair, resolve);
+                        $p.error.call($t, e, repair, resolve);
                     }
                 }
 
@@ -430,7 +516,7 @@
                     // sa zadania
                     dependences.map(function(task){
                         if (task.type == 'wait') {
-                            t.p.queue.wait(task.to, function(data){
+                            $p.queue.wait(task.to, function(data){
                                 if (!s.isUndefined(data)) {
                                     results[task.to] = data;
                                 }

@@ -18,74 +18,64 @@
         <script>
             window.onload = function()
             {
-                taskm.task(function(){
-                    this.exec(function(resolve, reject){
-                        console.log('1', this.get());
-                    });
-
-                    this.task(function(){
-                        this.exec(function(resolve, reject){
-                            console.log('1.1', this.get());
-                            resolve();
-                        });
-
-                        this.task(function(){
-                            this.setName('auth');
-                            this.exec(function(resolve, reject){
-                                console.log('1.1.1', this.get());
-                                setTimeout(function(){
-                                    resolve(123);
-                                }, 2000);
-                            });
-                        });
-
-                        this.task(function(){
-                            this.setName('auth2');
-                            this.exec(function(resolve, reject){
-                                console.log('1.1.2', this.get());
-                                setTimeout(function(){
-                                    resolve(123);
-                                }, 5000);
-                            });
-                        });
-
-                    });
-
-                    this.task(function(){
-                        this.exec(function(resolve, reject){
-                            console.log('1.2', this.get());
-                            resolve();
-                        });
-
-                        this.task('auth');
-                    });
-
-                }).then(function(data){
-                    console.log('then', data);
+                taskm.on('before', function(task){
+                    // console.log('before', task.getName());
                 });
 
-                // task = taskm.task(function(){
-                //     this.exec(function(resolve, reject){
+                var task = taskm.task(function(){
+                    this.init(function(){
+                        console.log('init');
+                        this.set('licznik', 0);
+                    });
 
-                //     });
+                    this.exec(function(resolve, reject){
+                        console.log('exec', this.get());
 
-                //     // definiuje zadanie zalezne
-                //     this.task(function(){
-                //         this.setName('z1');
+                        var licznik = this.get('licznik');
 
-                //         this.exec(function(){
-                //         });
+                        if(licznik < 5){
+                            console.log('reject');
+                            reject();
+                        }else{
+                            resolve('done');
+                        }
 
-                //     }).error(function(repair){
-                //         this.set('nazwisko', 'test');
-                //         repair();
-                //     });
+                    });
 
-                // });
+                    // }).error(function(data, repair, resolve){
+                    //     console.log('error', data);
 
-                // task.error(function(){
+                    //     var licznik = this.get('licznik');
+                    //     licznik++
+                    //     this.set('licznik', licznik);
+                    //     repair();
+                    // });
 
-                // });
+                    this.errorAll(function(){
+                        console.log('errorAll');
+                    });
+
+                    this.on('before', function(task){
+                        // console.log('before', task);
+                    });
+
+                    this.on('resolve', function(task){
+                        // console.log('resolve', task);
+                    });
+
+                    this.on('reject', function(task){
+                        // console.log('reject', task);
+                    });
+
+                    this.on('repair', function(task){
+                        // console.log('repair', task);
+                    });
+
+                }).then(function(result){
+                    console.log('result', result);
+                });
+
+
             }
         </script>
     </head>
