@@ -18,6 +18,7 @@
         <script>
             window.onload = function()
             {
+
                 taskm.on('before', function(task){
                     // console.log('before', task.getName());
                 });
@@ -39,20 +40,13 @@
                         }else{
                             resolve('done');
                         }
+                    }).error(function(data, repair, resolve){
+                        console.log('error', data);
 
-                    });
-
-                    // }).error(function(data, repair, resolve){
-                    //     console.log('error', data);
-
-                    //     var licznik = this.get('licznik');
-                    //     licznik++
-                    //     this.set('licznik', licznik);
-                    //     repair();
-                    // });
-
-                    this.errorAll(function(){
-                        console.log('errorAll');
+                        var licznik = this.get('licznik');
+                        licznik++
+                        this.set('licznik', licznik);
+                        repair();
                     });
 
                     this.on('before', function(task){
@@ -74,9 +68,8 @@
                 }).then(function(result){
                     console.log('result', result);
                 });
-
-
             }
+
         </script>
     </head>
 

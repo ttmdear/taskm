@@ -231,14 +231,8 @@
             events : new Events(this),
             // funckja wykonywana na bledzie
             error : function(data, repair, resolve){
-                if (s.isFunction($p.errorAll)) {
-                    $p.errorAll.call($t, data, repair, resolve);
-                    return;
-                }
-
                 throw("Not catch task error "+data);
             },
-            errorAll : null,
         };
 
         // public
@@ -284,12 +278,6 @@
                     $p.data[name] = value;
                 });
 
-                return this;
-            }
-
-            Task.prototype.errorAll = function(errorAll)
-            {
-                $p.errorAll = errorAll;
                 return this;
             }
 
